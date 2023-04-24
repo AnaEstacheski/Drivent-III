@@ -41,11 +41,41 @@ describe('GET /hotels', () => {
   });
 
   describe('when token is valid', () => {
-    it('should respond with status 404 when there is no enrollment for given user', async () => {
+    it('should respond with status 404 when user doesnt have an enrollment', async () => {
       const token = await generateValidToken();
       const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
+  });
+
+  it('should respond with status 404 when user doesnt have a ticket', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createEnrollmentWithAddress(user);
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toEqual(httpStatus.NOT_FOUND);
+  });
+
+  it('should respond with status 402 when user there is no paid ticket', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType();
+    await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+  });
+  it('should respond with status 402 when there is no hotel ticket included for given user', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType();
+    await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
   });
 });
 
@@ -72,7 +102,7 @@ describe('GET /hotels/:hotelId', () => {
   });
 
   describe('when token is valid', () => {
-    it('should respond with status 404 when there is no enrollment for given user', async () => {
+    it('should respond with status 404 when user doesnt have an enrollment', async () => {
       const token = await generateValidToken();
       const response = await server.get('/hotels/1').set('Authorization', `Bearer ${token}`);
 
