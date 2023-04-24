@@ -19,9 +19,24 @@ async function findHotel(hotelId: number) {
   });
 }
 
+async function findTicketPaid(userId: number) {
+  return prisma.ticket.findFirst({
+    where: {
+      Enrollment: {
+        userId,
+      },
+    },
+    include: {
+      Enrollment: true,
+      TicketType: true,
+    },
+  });
+}
+
 const hotelRepository = {
   findHotels,
   findHotel,
+  findTicketPaid,
 };
 
 export default hotelRepository;

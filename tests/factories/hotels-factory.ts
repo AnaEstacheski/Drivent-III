@@ -2,7 +2,7 @@ import faker from '@faker-js/faker';
 import { Hotel, Room } from '@prisma/client';
 import { prisma } from '@/config';
 
-export function createHotelandRoom(): Promise<Hotel & { Rooms: Room[] }> {
+export async function createHotelandRoom(): Promise<Hotel & { Rooms: Room[] }> {
   return prisma.hotel.create({
     data: {
       name: faker.name.findName(),

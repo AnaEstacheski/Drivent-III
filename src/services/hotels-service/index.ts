@@ -7,20 +7,20 @@ import enrollmentRepository from '@/repositories/enrollment-repository';
 async function getAllHotels(userId: number) {
   await verifyPaymentAndEnrollment(userId);
   const findHotels = await hotelRepository.findHotels();
-  if (!findHotels) throw notFoundError();
+  if (!findHotels.length) throw notFoundError();
   return findHotels;
 }
 
-async function verifyPaymentAndEnrollment(userId: number) {
+async function verifyPaymentAndEnrollment(userId: number): Promise<void> {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
   if (!enrollment) throw notFoundError();
 
-  const existingPaidTicket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
-  if (!existingPaidTicket) throw notFoundError();
+  const findPaidTicket = await hotelRepository.findTicketPaid(userId);
+  if (!findPaidTicket) throw notFoundError();
 
-  const notPaid = existingPaidTicket.status == TicketStatus.RESERVED;
-  const notIncludeHotel = !existingPaidTicket.TicketType.includesHotel;
-  const isRemote = existingPaidTicket.TicketType.isRemote;
+  const notPaid = findPaidTicket.status !== TicketStatus.PAID;
+  const notIncludeHotel = !findPaidTicket.TicketType.includesHotel;
+  const isRemote = findPaidTicket.TicketType.isRemote;
   if (notPaid || isRemote || notIncludeHotel) throw paymentRequiredError();
 }
 
