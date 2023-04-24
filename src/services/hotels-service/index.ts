@@ -24,8 +24,16 @@ async function verifyPaymentAndEnrollment(userId: number) {
   if (notPaid || isRemote || notIncludeHotel) throw paymentRequiredError();
 }
 
+async function getHotelById(hotelId: number, userId: number) {
+  await verifyPaymentAndEnrollment(userId);
+  const hotel = await hotelRepository.findHotel(hotelId);
+  if (!hotel) throw notFoundError();
+  return hotel;
+}
+
 const hotelsService = {
   getAllHotels,
+  getHotelById,
 };
 
 export default hotelsService;
